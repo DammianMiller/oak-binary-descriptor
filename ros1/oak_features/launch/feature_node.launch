@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="core_path" default="" doc="Path to the example root containing core/ (default: auto-detect)." />
+  <arg name="archive" default="depthai_models/descriptor64_itq_strip32_slim.tar.xz" doc="NNArchive path, relative to core_path unless absolute." />
+  <arg name="max_keypoints" default="64" />
+  <arg name="fps_limit" default="0" doc="0 = unlimited." />
+  <arg name="compression" default="itq" doc="One of: subsample, xorfold, lsh, itq." />
+  <arg name="publish_debug_image" default="false" />
+  <arg name="frame_id" default="oak_camera" />
+
+  <node pkg="oak_features" type="feature_node.py" name="oak_features" output="screen">
+    <param name="core_path" value="$(arg core_path)" unless="$(eval arg('core_path') == '')" />
+    <param name="archive" value="$(arg archive)" />
+    <param name="max_keypoints" value="$(arg max_keypoints)" />
+    <param name="fps_limit" value="$(arg fps_limit)" />
+    <param name="compression" value="$(arg compression)" />
+    <param name="publish_debug_image" value="$(arg publish_debug_image)" />
+    <param name="frame_id" value="$(arg frame_id)" />
+  </node>
+</launch>

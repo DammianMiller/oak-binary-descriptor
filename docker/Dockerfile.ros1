@@ -1,0 +1,45 @@
+# ROS1 Noetic container for the binary-descriptor example.
+#
+# depthai requires Python >= 3.9 but Noetic ships Python 3.8, so:
+#   - catkin/roscore run on the system Python 3.8 (message generation is
+#     version-agnostic pure Python),
+#   - the feature node runs on a standalone CPython 3.10 build
+#     (astral-sh/python-build-standalone) with depthai + rospy from PyPI.
+#
+# Build (from the example root):
+#   docker build -f docker/Dockerfile.ros1 -t oak-binary-desc:ros1 .
+# Run (needs USB passthrough for the OAK-1):
+#   docker run --rm --privileged -v /dev/bus/usb:/dev/bus/usb --net=host \
+#       oak-binary-desc:ros1 /opt/binary-descriptor/docker/run_ros1.sh
+
+FROM ros:noetic-ros-core
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        python3-pip python3-catkin-pkg curl ca-certificates build-essential cmake \
+        ros-noetic-sensor-msgs ros-noetic-catkin \
+    && rm -rf /var/lib/apt/lists/*
+
+# Standalone CPython 3.10 (focal's repos have no >= 3.9; deadsnakes no longer
+# serves focal). Pinned release asset.
+RUN curl -sSL "https://github.com/astral-sh/python-build-standalone/releases/download/20260825/cpython-3.10.21%2B20260825-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz" \
+        -o /tmp/py310.tar.gz \
+    && mkdir -p /opt/python310 \
+    && tar -xzf /tmp/py310.tar.gz -C /opt/python310 --strip-components=1 \
+    && rm /tmp/py310.tar.gz
+
+# Node runtime deps on Python 3.10. rospy/genpy/message stubs are NOT on PyPI;
+# the node imports them from the apt install (/usr/lib/python3/dist-packages,
+# built for 3.8) via PYTHONPATH -- they are pure Python and import under 3.10.
+RUN /opt/python310/bin/pip3 install --no-cache-dir \
+        depthai==3.8.0 "numpy<2" opencv-python-headless~=4.10.0 pyyaml rospkg catkin-pkg
+
+COPY . /opt/binary-descriptor
+
+# Generate oak_features_msgs with the system Python (3.8) via catkin.
+RUN mkdir -p /opt/ws/src \
+    && ln -s /opt/binary-descriptor/ros1/oak_features_msgs /opt/ws/src/oak_features_msgs \
+    && ln -s /opt/binary-descriptor/ros1/oak_features /opt/ws/src/oak_features \
+    && . /opt/ros/noetic/setup.sh \
+    && cd /opt/ws && catkin_make
+
+CMD ["/opt/binary-descriptor/docker/run_ros1.sh"]

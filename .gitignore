@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.env
+*.egg-info/
+build/
+dist/
+
+# Local-only live-camera captures (personal imagery, never published)
+media/captures/

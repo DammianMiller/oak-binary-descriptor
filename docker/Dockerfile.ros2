@@ -1,0 +1,29 @@
+# ROS2 Humble container for the binary-descriptor example.
+#
+# Humble ships Python 3.10, which depthai supports directly.
+#
+# Build (from the example root):
+#   docker build -f docker/Dockerfile.ros2 -t oak-binary-desc:ros2 .
+# Run (needs USB passthrough for the OAK-1):
+#   docker run --rm --privileged -v /dev/bus/usb:/dev/bus/usb --net=host \
+#       oak-binary-desc:ros2 /opt/binary-descriptor/docker/run_ros2.sh
+
+FROM ros:humble-ros-core
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3-pip python3-colcon-common-extensions build-essential cmake \
+        ros-humble-sensor-msgs ros-humble-rosidl-default-generators \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --no-cache-dir \
+        depthai==3.8.0 "numpy<2" opencv-python-headless~=4.10.0
+
+COPY . /opt/binary-descriptor
+
+RUN mkdir -p /opt/ws/src \
+    && ln -s /opt/binary-descriptor/ros2/oak_features_msgs /opt/ws/src/oak_features_msgs \
+    && ln -s /opt/binary-descriptor/ros2/oak_features /opt/ws/src/oak_features \
+    && . /opt/ros/humble/setup.sh \
+    && cd /opt/ws && colcon build
+
+CMD ["/opt/binary-descriptor/docker/run_ros2.sh"]

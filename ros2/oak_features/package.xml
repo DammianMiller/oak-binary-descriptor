@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>oak_features</name>
+  <version>0.1.0</version>
+  <description>ROS2 node publishing keypoints with binary descriptors from an OAK camera.</description>
+  <maintainer email="support@luxonis.com">Luxonis</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>oak_features_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

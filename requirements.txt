@@ -1,0 +1,4 @@
+depthai==3.8.0
+numpy>=1.22
+opencv-python-headless~=4.10.0
+python-dotenv
